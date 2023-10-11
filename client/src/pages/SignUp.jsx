@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 function SignUp() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [data, setData] = useState({
     username: "",
@@ -12,18 +13,27 @@ function SignUp() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    const res = await fetch("http://localhost:8080/api/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    const receiveData = await res.json({});
-    console.log(receiveData);
-    setLoading(false);
-    navigate("/sign-in");
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:8080/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const receiveData = await res.json({});
+      if (receiveData.success === false) {
+        setLoading(false);
+        setError(receiveData.message);
+        return;
+      }
+      setLoading(false);
+      navigate("/sign-in");
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   const changehandler = (e) => {
@@ -64,6 +74,7 @@ function SignUp() {
         />
         <button
           type="submit"
+          disabled={loading}
           className="rounded-lg p-3 uppercase hover:opacity-90 bg-[#345225] text-white"
         >
           {loading ? "Loading..." : "Submit"}
@@ -75,6 +86,7 @@ function SignUp() {
           <span className="text-[#6f8165]">Sign-In</span>
         </Link>
       </div>
+      {error && <h2 className="text-red-500 mt-5">{error}</h2>}
     </div>
   );
 }
